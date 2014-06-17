@@ -1,0 +1,49 @@
+---
+title: "Weight Lifting Exercise Dataset -- Exploratory Analyisis"
+author: "You-Cyuan Jhang"
+date: "June 17, 2014"
+output: html_document
+---
+
+## Setup
+
+Load required libraries. Use data.table for faster data cleanup.
+
+```{r load_library}
+library(caret, quietly = T)
+library(data.table)
+cwd <- "~/Dropbox/Course/2014/Coursera_Practical_Machine_Learning/weight_lifting"
+```
+
+## Data Cleanup
+
+First, read the weight lifting dataset. The dataset **pml-training.csv** will be use to build machine learning model. We will then use the model to predict testing dataset given in **pml-testing.csv**. So, my exploratory analysis will focus on training dataset only.
+
+```{r read_data}
+wle_data <- fread(paste0(cwd, "/data/original/pml-training.csv"), na.strings=c("NA","#DIV/0!",""))
+# wl_submission <- read.csv(paste0(cwd, "/data/original/pml-testing.csv"))
+```
+
+First, according to the [paper](http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf), they use a sliding window approach to detect and separate each movement. Then the statics (mean, variance, skiness..) of this windos measure is calculated and stored. Therefore, my first step is to filter out this record from the original dataset. Then remove unrevelent **time stamp** columns, **record_id** column and **new_window** column.
+
+```{r window}
+wle_data <- wle_data[new_window == "yes",]
+wle_data <- wle_data[, c("V1", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "new_window") := NULL]
+```
+
+Notice that some of the columns has value **#DIV/0!** from the original dataset. This is because when computing the statictics in these columns, some of the value are missing or zero. I alreadt replace these values with **NA** when reading data.
+Now I will use imputation method in **caret** package to fill these missing values. Also remove nearzero columns using **nearZeroVar()** function in caret.
+
+```{r preprocess}
+# Convert should be numeric columns to numeric
+wle_data <- wle_data[,lapply(.SD, as.numeric), by=c("num_window", "user_name", "classe")]
+# Detect near zero columns and remove them
+wle_nearzero <- nearZeroVar(wle_data, saveMetrics = TRUE)
+wle_numeric <- wle_data[,!wle_nearzero$nzv, with = F]
+wle_numeric <- wle_numeric[,4:ncol(wle_numeric), with = F]
+# Impute missing values using knn with k = 5
+impute_model <- preProcess(wle_numeric, method = "knnImpute", k = 5)
+wle_data_clean <- predict(impute_model, newdata = wle_numeric)
+# Put back classe (the response variable)
+wle_data_clean$classe = wle_data$classe
+```
