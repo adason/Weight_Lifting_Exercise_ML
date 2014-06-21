@@ -48,3 +48,8 @@ Thumbs.db
 # For this Project   #
 ######################
 data
+code/analysis.R
+_submission
+report/*_cache
+report/*_files
+report/*_submission
