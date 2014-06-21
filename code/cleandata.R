@@ -37,5 +37,6 @@ wle_training <- wle_data[train_indices$Resample1]
 wle_testing <- wle_data[-train_indices$Resample1]
 
 # Save training and testing to rdata
-dir.create(paste0(project_dir, "/data/archived"))
-save(wle_training, wle_testing, file = paste0(project_dir, "/data/archived/wle.RData"))
+dir.create(paste0(project_dir, "/data/archived"), showWarnings = FALSE)
+saveRDS(wle_training, file = paste0(project_dir, "/data/archived/wle_training.rds"))
+saveRDS(wle_testing, file = paste0(project_dir, "/data/archived/wle_testing.rds"))
