@@ -183,12 +183,20 @@ glmnet_cf$overall[1]
 
 Pick the most accuracy model.
 
-```{r make_submission, eval = FALSE}
+```{r make_submission}
 wle_submission <- wle_submission[, c("V1", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "new_window", "num_window", "user_name") := NULL]
-wle_submission <- wle_submission[,lapply(.SD, as.numeric), by=c("classe")]
+wle_submission <- wle_submission[,lapply(.SD, as.numeric), by = c("problem_id")]
 wle_submission <- wle_submission[,!wle_nearzero$nzv, with = FALSE]
-wle_submission <- predict(preprocess_model, newdata = wle_submission)
+wle_submission_id <- wle_submission$problem_id
+wle_submission <- predict(preprocess_model, newdata = wle_submission[, -1, with = FALSE])
 wle_submission_y <- predict(rf_model, newdata = wle_submission)
+```
+
+```{r save_submission, echo = FALSE}
+dir.create("tree_based_prediction_submission")
+for (i in wle_submission_id){
+  write(as.character(wle_submission_y[i]), file = paste0("tree_based_prediction_submission/", i))
+}
 ```
 
 ## Discussion

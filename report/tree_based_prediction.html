@@ -207,10 +207,12 @@ glmnet_cf &lt;- confusionMatrix(glmnet_testing_y, wle_testing_y)</code></pre>
 <h3>Choices and Make Submission</h3>
 <p>Pick the most accuracy model.</p>
 <pre class="r"><code>wle_submission &lt;- wle_submission[, c(&quot;V1&quot;, &quot;raw_timestamp_part_1&quot;, &quot;raw_timestamp_part_2&quot;, &quot;cvtd_timestamp&quot;, &quot;new_window&quot;, &quot;num_window&quot;, &quot;user_name&quot;) := NULL]
-wle_submission &lt;- wle_submission[,lapply(.SD, as.numeric), by=c(&quot;classe&quot;)]
+wle_submission &lt;- wle_submission[,lapply(.SD, as.numeric), by = c(&quot;problem_id&quot;)]
 wle_submission &lt;- wle_submission[,!wle_nearzero$nzv, with = FALSE]
-wle_submission &lt;- predict(preprocess_model, newdata = wle_submission)
+wle_submission_id &lt;- wle_submission$problem_id
+wle_submission &lt;- predict(preprocess_model, newdata = wle_submission[, -1, with = FALSE])
 wle_submission_y &lt;- predict(rf_model, newdata = wle_submission)</code></pre>
+<pre><code>## Warning: 'tree_based_prediction_submission' already exists</code></pre>
 </div>
 </div>
 <div id="discussion" class="section level2">
